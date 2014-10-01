@@ -16,7 +16,7 @@ public class GameLogic : MonoBehaviour {
     List<Tile> dropTiles = new List<Tile>();
     List<Tile> stageTiles = new List<Tile>();
     bool inputReady = false;
-    
+
 
     // Use this for initialization
     void Start() {
@@ -30,19 +30,30 @@ public class GameLogic : MonoBehaviour {
         if (inputReady) {
             if (Input.GetButtonDown("Flip")) {
                 RotateStage(Direction.flip);
-            } else if (Input.GetButtonDown("RotateLeft")) {
-
-            } else if (Input.GetButtonDown("RotateRight")) {
-
+            }
+            if (Input.GetButtonDown("RotateLeft")) {
+                RotateStage(Direction.left);
+            }
+            if (Input.GetButtonDown("RotateRight")) {
+                RotateStage(Direction.right);
             }
         }
     }
 
     void RotateStage(Direction dir) {
+        float currentRotation = berryContainer.rotation.eulerAngles.z;
         if (dir == Direction.flip) {
-            LeanTween.rotateZ(berryContainer.gameObject, 180, 1f).setEase(LeanTweenType.easeInOutElastic);
+            LeanTween.scaleX(berryContainer.gameObject, berryContainer.localScale.x * -1, 1f).setEase(LeanTweenType.easeInOutQuad);
             foreach (Tile tile in stageTiles) {
-                tile.transform.parent = berryContainer;
+                LeanTween.scaleY(tile.gameObject, tile.transform.localScale.x * -1, 1f).setEase(LeanTweenType.easeInOutElastic);
+            }
+        } else {
+            if (dir == Direction.left) {
+                LeanTween.rotateZ(berryContainer.gameObject, currentRotation + 90, 1f).setEase(LeanTweenType.easeInOutQuad);
+            } else if (dir == Direction.right) {
+                LeanTween.rotateZ(berryContainer.gameObject, currentRotation - 90, 1f).setEase(LeanTweenType.easeInOutQuad);
+            }
+            foreach (Tile tile in stageTiles) {
                 LeanTween.rotateZ(tile.gameObject, 0, 1f).setEase(LeanTweenType.easeInOutElastic);
             }
         }
@@ -65,7 +76,7 @@ public class GameLogic : MonoBehaviour {
         }
         dropTiles.Clear();
     }
-    
+
     void DropComplete() {
         inputReady = true;
     }
