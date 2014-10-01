@@ -30,6 +30,10 @@ public class GameLogic : MonoBehaviour {
         if (inputReady) {
             if (Input.GetButtonDown("Flip")) {
                 RotateStage(Direction.flip);
+            } else if (Input.GetButtonDown("RotateLeft")) {
+
+            } else if (Input.GetButtonDown("RotateRight")) {
+
             }
         }
     }
@@ -64,5 +68,9 @@ public class GameLogic : MonoBehaviour {
     
     void DropComplete() {
         inputReady = true;
+    }
+
+    void CheckMatch() {
+
     }
 }
