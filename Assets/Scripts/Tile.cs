@@ -4,10 +4,10 @@ using System.Collections;
 public class Tile : MonoBehaviour {
 
     public enum Types {
+        empty,
         blaubeer,
         himbeer,
-        stachelbeer
-        
+        stachelbeer        
     }
     public Types type;
 
