@@ -1,68 +1,170 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
-public class GameLogic : MonoBehaviour {
+public class GameLogic : MonoBehaviour
+{
 
     public Tile tile;
     public Transform dropContainer;
     public Transform berryContainer;
-    public enum Direction {
+    public enum RotationDirection
+    {
         left,
         right,
         flip
-    }
+    }    
+    public float animationSpeed = .5f;
 
     List<Tile> dropTiles = new List<Tile>();
     List<Tile> stageTiles = new List<Tile>();
+    int[,] grid = new int[5, 5];
     bool inputReady = false;
-    
+    int stageDirection = 0;
+    int rotation = 90;
+
 
     // Use this for initialization
-    void Start() {
+    void Start()
+    {
         tile.CreatePool(35);
         FillDropTiles(5);
         Drop();
     }
 
     // Update is called once per frame
-    void Update() {
-        if (inputReady) {
-            if (Input.GetButtonDown("Flip")) {
-                RotateStage(Direction.flip);
+    void Update()
+    {
+        if (inputReady)
+        {
+            if (Input.GetButtonDown("Flip"))
+            {
+                RotateStage(RotationDirection.flip);
+            }
+            if (Input.GetButtonDown("RotateLeft"))
+            {
+                RotateStage(RotationDirection.left);
+            }
+            if (Input.GetButtonDown("RotateRight"))
+            {
+                RotateStage(RotationDirection.right);
             }
         }
     }
 
-    void RotateStage(Direction dir) {
-        if (dir == Direction.flip) {
-            LeanTween.rotateZ(berryContainer.gameObject, 180, 1f).setEase(LeanTweenType.easeInOutElastic);
-            foreach (Tile tile in stageTiles) {
-                tile.transform.parent = berryContainer;
-                LeanTween.rotateZ(tile.gameObject, 0, 1f).setEase(LeanTweenType.easeInOutElastic);
+    void RotateStage(RotationDirection dir)
+    {
+        inputReady = false;
+        
+        if (dir == RotationDirection.flip)
+        {
+            LeanTween.scaleY(berryContainer.parent.gameObject, berryContainer.parent.localScale.y * -1, animationSpeed).setEase(LeanTweenType.easeInOutQuad);
+            //if (currentRotation != 90 && currentRotation != 270) {
+            //    LeanTween.scaleY(berryContainer.gameObject, berryContainer.localScale.y * -1, animationSpeed).setEase(LeanTweenType.easeInOutQuad);
+            //} else {
+            //    LeanTween.scaleX(berryContainer.gameObject, berryContainer.localScale.x * -1, animationSpeed).setEase(LeanTweenType.easeInOutQuad);
+            //}
+            
+            foreach (Tile tile in stageTiles)
+            {
+                LeanTween.scaleY(tile.gameObject, tile.transform.localScale.y * -1, animationSpeed).setEase(LeanTweenType.easeInOutElastic);
             }
         }
+        else
+        {
+
+            int currentRotation = (int)berryContainer.localRotation.eulerAngles.z;
+            if (dir == RotationDirection.left)
+            {
+                LeanTween.rotateZ(berryContainer.gameObject, currentRotation + rotation * berryContainer.parent.localScale.y, animationSpeed).setEase(LeanTweenType.easeInOutQuad);
+            }
+            else if (dir == RotationDirection.right)
+            {
+                LeanTween.rotateZ(berryContainer.gameObject, currentRotation - rotation * berryContainer.parent.localScale.y, animationSpeed).setEase(LeanTweenType.easeInOutQuad);
+            }
+            foreach (Tile tile in stageTiles)
+            {
+                    LeanTween.rotateZ(tile.gameObject, 0, animationSpeed).setEase(LeanTweenType.easeInOutElastic);
+            }
+        }
+        Invoke("Drop", animationSpeed+.1f);
     }
 
-    void FillDropTiles(int amount) {
+    void FillDropTiles(int amount)
+    {
 
-        for (int i = 0; i < amount; i++) {
+        for (int i = 0; i < amount; i++)
+        {
             Tile newTile = tile.Spawn(new Vector3(i, 5, 0), Quaternion.identity);
             newTile.transform.parent = dropContainer;
             dropTiles.Add(newTile);
         }
     }
 
-    void Drop() {
-        foreach (Tile tile in dropTiles) {
-            tile.transform.parent = berryContainer;
-            stageTiles.Add(tile);
-            LeanTween.moveY(tile.gameObject, 0, 1f).setEase(LeanTweenType.easeOutBounce).setOnComplete(DropComplete);
+    void Drop()
+    {
+        List<Tile> droppedTiles = new List<Tile>();
+        foreach (Tile tile in dropTiles)
+        {
+            if (grid[(int)tile.transform.position.x, 0] == 0)
+            {
+                tile.transform.position = new Vector3(tile.transform.position.x, 4, 0);
+                tile.transform.parent = berryContainer;
+                grid[(int)tile.transform.position.x, 4] = (int)tile.type;
+                droppedTiles.Add(tile);
+                stageTiles.Add(tile);
+            }
         }
-        dropTiles.Clear();
+        foreach (Tile tile in droppedTiles)
+        {
+            dropTiles.Remove(tile);
+        }
+        droppedTiles.Clear();
+        stageTiles = stageTiles.OrderBy(tile => tile.transform.position.y).ToList();
+
+        bool isDropping = false;
+
+        foreach (Tile tile in stageTiles)
+        {
+            
+            if (tile.transform.position.y != 0)
+            {
+                int newPosition = -1;
+                for (int y = (int)tile.transform.position.y; y > 0; y--)
+                {
+                    if (grid[(int)tile.transform.position.x, y] == 0)
+                    {
+                        newPosition = y;
+                    }
+                }
+                if (newPosition != -1)
+                {
+                    isDropping = true;
+                    grid[(int)tile.transform.position.x, (int)tile.transform.position.y] = 0;
+                    grid[(int)tile.transform.position.x, newPosition] = (int)tile.type;
+                    LeanTween.moveY(tile.gameObject, newPosition, animationSpeed).setEase(LeanTweenType.easeOutBounce);
+                }
+            }
+        }
+        if (!isDropping)
+        {
+            DropComplete();
+        }
+        else
+        {
+            Invoke("DropComplete", animationSpeed+.1f);
+        }
     }
-    
-    void DropComplete() {
+
+    void DropComplete()
+    {
+        CheckMatch();
+    }
+
+    void CheckMatch()
+    {
+        //FillDropTiles(2);
         inputReady = true;
     }
 }
