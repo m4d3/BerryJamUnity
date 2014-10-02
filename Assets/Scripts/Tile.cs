@@ -11,16 +11,17 @@ public class Tile : MonoBehaviour {
     }
     public Types type;
 
-    bool onStage = false;
-    Sprite[] graphics;
+    public Sprite[] graphics;
     SpriteRenderer sRenderer;
 
 	// Use this for initialization
 	void Start () {
-        graphics = Resources.LoadAll<Sprite>("Sprites");
-        sRenderer = GetComponent<SpriteRenderer>();
-        SetType();
+        //graphics = Resources.LoadAll<Sprite>("Sprites");
 	}
+
+    void OnEnable() {
+        SetType();
+    }
 	
 	// Update is called once per frame
 	void Update () {
@@ -28,6 +29,7 @@ public class Tile : MonoBehaviour {
 	}
 
     void SetType() {
+        sRenderer = gameObject.GetComponent<SpriteRenderer>();
         int randColor = Random.Range(0, 3);
         if (randColor == 0) {
             type = Types.blaubeer;

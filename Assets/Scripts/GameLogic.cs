@@ -14,20 +14,15 @@ public class GameLogic : MonoBehaviour
         left,
         right,
         flip
-    }
-    public enum StageDirection
-    {
-        up,
-        down,
-        left,
-        right
-    }
+    }    
+    public float animationSpeed = .5f;
 
-    StageDirection direction = StageDirection.down;
     List<Tile> dropTiles = new List<Tile>();
     List<Tile> stageTiles = new List<Tile>();
     int[,] grid = new int[5, 5];
     bool inputReady = false;
+    int stageDirection = 0;
+    int rotation = 90;
 
 
     // Use this for initialization
@@ -61,31 +56,39 @@ public class GameLogic : MonoBehaviour
     void RotateStage(RotationDirection dir)
     {
         inputReady = false;
-        float currentRotation = berryContainer.rotation.eulerAngles.z;
+        
         if (dir == RotationDirection.flip)
         {
-            LeanTween.scaleX(berryContainer.gameObject, berryContainer.localScale.x * -1, 1f).setEase(LeanTweenType.easeInOutQuad);
+            LeanTween.scaleY(berryContainer.parent.gameObject, berryContainer.parent.localScale.y * -1, animationSpeed).setEase(LeanTweenType.easeInOutQuad);
+            //if (currentRotation != 90 && currentRotation != 270) {
+            //    LeanTween.scaleY(berryContainer.gameObject, berryContainer.localScale.y * -1, animationSpeed).setEase(LeanTweenType.easeInOutQuad);
+            //} else {
+            //    LeanTween.scaleX(berryContainer.gameObject, berryContainer.localScale.x * -1, animationSpeed).setEase(LeanTweenType.easeInOutQuad);
+            //}
+            
             foreach (Tile tile in stageTiles)
             {
-                LeanTween.scaleY(tile.gameObject, tile.transform.localScale.x * -1, 1f).setEase(LeanTweenType.easeInOutElastic);
+                LeanTween.scaleY(tile.gameObject, tile.transform.localScale.y * -1, animationSpeed).setEase(LeanTweenType.easeInOutElastic);
             }
         }
         else
         {
+
+            int currentRotation = (int)berryContainer.localRotation.eulerAngles.z;
             if (dir == RotationDirection.left)
             {
-                LeanTween.rotateZ(berryContainer.gameObject, currentRotation + 90, 1f).setEase(LeanTweenType.easeInOutQuad);
+                LeanTween.rotateZ(berryContainer.gameObject, currentRotation + rotation * berryContainer.parent.localScale.y, animationSpeed).setEase(LeanTweenType.easeInOutQuad);
             }
             else if (dir == RotationDirection.right)
             {
-                LeanTween.rotateZ(berryContainer.gameObject, currentRotation - 90, 1f).setEase(LeanTweenType.easeInOutQuad);
+                LeanTween.rotateZ(berryContainer.gameObject, currentRotation - rotation * berryContainer.parent.localScale.y, animationSpeed).setEase(LeanTweenType.easeInOutQuad);
             }
             foreach (Tile tile in stageTiles)
             {
-                LeanTween.rotateZ(tile.gameObject, 0, 1f).setEase(LeanTweenType.easeInOutElastic);
+                    LeanTween.rotateZ(tile.gameObject, 0, animationSpeed).setEase(LeanTweenType.easeInOutElastic);
             }
         }
-        Invoke("Drop", 1.1f);
+        Invoke("Drop", animationSpeed+.1f);
     }
 
     void FillDropTiles(int amount)
@@ -128,7 +131,7 @@ public class GameLogic : MonoBehaviour
             if (tile.transform.position.y != 0)
             {
                 int newPosition = -1;
-                for (int y = (int)(tile.transform.position.y - 1); y > 0; y--)
+                for (int y = (int)tile.transform.position.y; y > 0; y--)
                 {
                     if (grid[(int)tile.transform.position.x, y] == 0)
                     {
@@ -140,7 +143,7 @@ public class GameLogic : MonoBehaviour
                     isDropping = true;
                     grid[(int)tile.transform.position.x, (int)tile.transform.position.y] = 0;
                     grid[(int)tile.transform.position.x, newPosition] = (int)tile.type;
-                    LeanTween.moveY(tile.gameObject, newPosition, 1f).setEase(LeanTweenType.easeOutBounce);
+                    LeanTween.moveY(tile.gameObject, newPosition, animationSpeed).setEase(LeanTweenType.easeOutBounce);
                 }
             }
         }
@@ -150,7 +153,7 @@ public class GameLogic : MonoBehaviour
         }
         else
         {
-            Invoke("DropComplete", 1.1f);
+            Invoke("DropComplete", animationSpeed+.1f);
         }
     }
 
@@ -161,8 +164,7 @@ public class GameLogic : MonoBehaviour
 
     void CheckMatch()
     {
-        Debug.Log("Checking");
-        FillDropTiles(2);
+        //FillDropTiles(2);
         inputReady = true;
     }
 }
