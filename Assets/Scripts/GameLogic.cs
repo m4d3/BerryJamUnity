@@ -19,6 +19,7 @@ public class GameLogic : MonoBehaviour {
     List<Tile> stageTiles = new List<Tile>();
     int[,] grid = new int[5, 5];
     bool inputReady = false;
+    
     int stageDirection = 0;
     int rotation = 90;
 
@@ -76,12 +77,12 @@ public class GameLogic : MonoBehaviour {
             newTile.transform.parent = dropContainer;
             dropTiles.Add(newTile);
         }
-    }
+    }    
 
     void Drop() {
         List<Tile> droppedTiles = new List<Tile>();
         foreach (Tile tile in dropTiles) {
-            if (grid[(int)tile.transform.position.x, 0] == 0) {
+            if (grid[(int)tile.transform.position.x, 4] == 0) {
                 tile.transform.position = new Vector3(tile.transform.position.x, 4, 0);
                 tile.transform.parent = berryContainer;
                 grid[(int)tile.transform.position.x, 4] = (int)tile.type;
@@ -98,25 +99,18 @@ public class GameLogic : MonoBehaviour {
         bool isDropping = false;
 
         foreach (Tile tile in stageTiles) {
-
-            if (tile.transform.position.y != 0) {
-                int newPosition = -1;
-                for (int y = (int)tile.transform.position.y; y > 0; y--) {
-                    if (grid[(int)tile.transform.position.x, y] == 0) {
-                        newPosition = y;
-                    }
-                }
-                if (newPosition != -1) {
-                    isDropping = true;
-                    grid[(int)tile.transform.position.x, (int)tile.transform.position.y] = 0;
-                    grid[(int)tile.transform.position.x, newPosition] = (int)tile.type;
-                    LeanTween.moveY(tile.gameObject, newPosition, animationSpeed).setEase(LeanTweenType.easeOutBounce);
-                }
+            //if (tile.canDrop && tile.transform.position.y > 0) {
+            //    isDropping = true;
+            //    LeanTween.moveY(tile.gameObject, tile.transform.position.y - 1, animationSpeed).setEase(LeanTweenType.easeOutBounce);
+            //}
+            if (tile.canDrop) {
+                isDropping = true;
             }
+            tile.Drop();
         }
         if (!isDropping) {
             DropComplete();
-        } else {
+        } else {            
             Invoke("DropComplete", animationSpeed + .1f);
         }
     }
@@ -126,7 +120,7 @@ public class GameLogic : MonoBehaviour {
     }
 
     void CheckMatch() {
-        //FillDropTiles(2);
+        FillDropTiles(2);
         inputReady = true;
     }
 }
